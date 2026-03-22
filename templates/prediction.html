@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="{{ url_for('static', filename='icons8-facebook-ios-16-filled-32.png') }}">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <title>Analyze News – FakeGuard</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0f0f1a;
+      color: #e2e8f0;
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    /* ── Navbar ── */
+    .navbar {
+      background: rgba(15,15,26,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .navbar-brand {
+      font-weight: 700; font-size: 1.2rem;
+      color: #fff !important;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .brand-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #10b981, #3b82f6);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .nav-link { color: #94a3b8 !important; font-weight: 500; transition: color 0.2s; }
+    .nav-link:hover, .nav-link.active { color: #10b981 !important; }
+
+    /* ── Page layout ── */
+    .page-wrap {
+      min-height: calc(100vh - 65px);
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 60px 16px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    .page-wrap::before {
+      content: '';
+      position: fixed;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%);
+      top: -150px; left: -150px;
+      pointer-events: none;
+    }
+    .page-wrap::after {
+      content: '';
+      position: fixed;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%);
+      bottom: -100px; right: -100px;
+      pointer-events: none;
+    }
+
+    /* ── Card ── */
+    .predict-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 24px;
+      padding: 48px 44px;
+      width: 100%;
+      max-width: 680px;
+      position: relative;
+      z-index: 1;
+      backdrop-filter: blur(8px);
+    }
+    .card-header-area { text-align: center; margin-bottom: 36px; }
+    .card-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.25);
+      color: #10b981;
+      padding: 5px 14px; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .card-header-area h1 {
+      font-size: 1.9rem; font-weight: 800; color: #fff; margin-bottom: 8px;
+    }
+    .card-header-area p { color: #64748b; font-size: 0.95rem; margin: 0; }
+
+    /* ── Form ── */
+    .form-label { font-weight: 600; color: #cbd5e1; font-size: 0.9rem; margin-bottom: 8px; }
+    .form-control {
+      background: rgba(255,255,255,0.05) !important;
+      border: 1px solid rgba(255,255,255,0.1) !important;
+      border-radius: 12px !important;
+      color: #e2e8f0 !important;
+      font-size: 0.95rem;
+      padding: 14px 16px;
+      resize: vertical;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-control::placeholder { color: #475569; }
+    .form-control:focus {
+      border-color: rgba(16,185,129,0.5) !important;
+      box-shadow: 0 0 0 3px rgba(16,185,129,0.12) !important;
+      outline: none;
+    }
+    .form-text { color: #475569; font-size: 0.82rem; margin-top: 6px; }
+
+    .char-counter { font-size: 0.8rem; color: #475569; text-align: right; margin-top: 4px; }
+
+    .btn-analyze {
+      width: 100%;
+      background: linear-gradient(135deg, #10b981, #059669);
+      border: none; color: #fff;
+      padding: 15px;
+      border-radius: 12px;
+      font-weight: 700; font-size: 1rem;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 20px rgba(16,185,129,0.3);
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    .btn-analyze:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(16,185,129,0.4);
+    }
+    .btn-analyze:active { transform: translateY(0); }
+
+    /* ── Result boxes ── */
+    .result-box {
+      border-radius: 16px;
+      padding: 24px 28px;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: flex-start;
+      gap: 18px;
+      animation: slideIn 0.4s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .result-fake {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+    }
+    .result-real {
+      background: rgba(16,185,129,0.1);
+      border: 1px solid rgba(16,185,129,0.3);
+    }
+    .result-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; flex-shrink: 0;
+    }
+    .result-fake .result-icon { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .result-real .result-icon { background: rgba(16,185,129,0.15); color: #10b981; }
+    .result-content .verdict {
+      font-size: 1.05rem; font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .result-fake .verdict { color: #f87171; }
+    .result-real .verdict { color: #34d399; }
+    .result-content .sub { font-size: 0.85rem; color: #64748b; }
+
+    /* ── Error ── */
+    .error-box {
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.3);
+      border-radius: 12px;
+      padding: 14px 18px;
+      color: #fbbf24;
+      font-size: 0.9rem;
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 20px;
+      animation: slideIn 0.3s ease;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      margin: 28px 0;
+    }
+
+    /* ── Tips ── */
+    .tips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+    .tip-chip {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      color: #64748b;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      user-select: none;
+    }
+    .tip-chip:hover { border-color: rgba(16,185,129,0.4); color: #10b981; }
+
+    /* ── Loading spinner ── */
+    .spinner { display: none; }
+    .btn-analyze.loading .spinner { display: inline-block; }
+    .btn-analyze.loading .btn-text { display: none; }
+
+    @media (max-width: 576px) {
+      .predict-card { padding: 32px 22px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-md px-4">
+    <a class="navbar-brand" href="/">
+      <div class="brand-icon">
+        <i class="bi bi-shield-check text-white" style="font-size:1rem;"></i>
+      </div>
+      FakeGuard
+    </a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <i class="bi bi-list text-white fs-4"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto align-items-center gap-2">
+        <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+        <li class="nav-item"><a class="nav-link active" href="/predict">Predict</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="page-wrap">
+    <div class="predict-card">
+
+      <!-- Header -->
+      <div class="card-header-area">
+        <div class="card-badge"><i class="bi bi-cpu"></i> AI Analysis</div>
+        <h1>Analyze News</h1>
+        <p>Paste a headline or article text to get an instant fake news verdict.</p>
+      </div>
+
+      <!-- Result -->
+      {% if prediction_text %}
+        <div class="result-box {% if is_fake %}result-fake{% else %}result-real{% endif %}">
+          <div class="result-icon">
+            {% if is_fake %}
+              <i class="bi bi-exclamation-triangle-fill"></i>
+            {% else %}
+              <i class="bi bi-patch-check-fill"></i>
+            {% endif %}
+          </div>
+          <div class="result-content">
+            <div class="verdict">{{ prediction_text }}</div>
+            <div class="sub">
+              {% if is_fake %}
+                This article shows patterns commonly associated with misinformation.
+              {% else %}
+                This article appears to be from a credible source.
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Error -->
+      {% if error %}
+        <div class="error-box">
+          <i class="bi bi-exclamation-circle-fill"></i>
+          {{ error }}
+        </div>
+      {% endif %}
+
+      <!-- Form -->
+      <form action="/predict" method="POST" id="predictForm">
+        <div class="mb-2">
+          <label for="news" class="form-label">News Headline or Article</label>
+          <textarea class="form-control" id="news" name="news" rows="5"
+            placeholder="e.g. Scientists discover new treatment for cancer that cures patients overnight..."></textarea>
+          <div class="char-counter"><span id="charCount">0</span> characters</div>
+          <div class="form-text"><i class="bi bi-info-circle me-1"></i>Works best with full headlines or article excerpts.</div>
+        </div>
+
+        <button type="submit" class="btn-analyze" id="analyzeBtn">
+          <span class="btn-text"><i class="bi bi-search"></i> Analyze News</span>
+          <span class="spinner">
+            <span class="spinner-border spinner-border-sm" role="status"></span> Analyzing...
+          </span>
+        </button>
+      </form>
+
+      <hr class="divider">
+
+      <!-- Sample prompts -->
+      <div>
+        <p style="font-size:0.82rem; color:#475569; margin-bottom:10px;">
+          <i class="bi bi-lightbulb me-1"></i> Try a sample:
+        </p>
+        <div class="tips">
+          <span class="tip-chip" onclick="fillSample(this)">NASA confirms alien life on Mars</span>
+          <span class="tip-chip" onclick="fillSample(this)">WHO releases new vaccine guidelines for 2024</span>
+          <span class="tip-chip" onclick="fillSample(this)">Government secretly adding chemicals to water supply</span>
+          <span class="tip-chip" onclick="fillSample(this)">Federal Reserve raises interest rates by 0.25%</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const textarea = document.getElementById('news');
+    const charCount = document.getElementById('charCount');
+    const form = document.getElementById('predictForm');
+    const btn = document.getElementById('analyzeBtn');
+
+    textarea.addEventListener('input', () => {
+      charCount.textContent = textarea.value.length;
+    });
+
+    form.addEventListener('submit', (e) => {
+      const val = textarea.value.trim();
+      if (!val || val.length < 5) {
+        e.preventDefault();
+        textarea.style.borderColor = 'rgba(239,68,68,0.6)';
+        textarea.focus();
+        setTimeout(() => textarea.style.borderColor = '', 2000);
+        return;
+      }
+      btn.classList.add('loading');
+    });
+
+    function fillSample(el) {
+      textarea.value = el.textContent;
+      charCount.textContent = el.textContent.length;
+      textarea.focus();
+    }
+
+    // Auto-scroll to result if present
+    if (document.querySelector('.result-box, .error-box')) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>

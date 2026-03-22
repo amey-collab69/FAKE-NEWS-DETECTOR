@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="{{ url_for('static', filename='icons8-facebook-ios-16-filled-32.png') }}">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <title>Fake News Detector</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0f0f1a;
+      color: #e2e8f0;
+      margin: 0;
+    }
+
+    /* ── Navbar ── */
+    .navbar {
+      background: rgba(15, 15, 26, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .navbar-brand {
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: #fff !important;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #10b981, #3b82f6);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .nav-link {
+      color: #94a3b8 !important;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-link:hover { color: #10b981 !important; }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 92vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      padding: 60px 0;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%);
+      top: -200px; left: -200px;
+      pointer-events: none;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%);
+      bottom: -100px; right: -100px;
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.3);
+      color: #10b981;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 800;
+      line-height: 1.15;
+      color: #fff;
+      margin-bottom: 20px;
+    }
+    .hero h1 span {
+      background: linear-gradient(90deg, #10b981, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: 1.1rem;
+      color: #94a3b8;
+      max-width: 480px;
+      line-height: 1.7;
+      margin-bottom: 36px;
+    }
+    .btn-primary-custom {
+      background: linear-gradient(135deg, #10b981, #059669);
+      border: none;
+      color: #fff;
+      padding: 14px 32px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 1rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 20px rgba(16,185,129,0.35);
+    }
+    .btn-primary-custom:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(16,185,129,0.45);
+      color: #fff;
+    }
+    .btn-outline-custom {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #e2e8f0;
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-weight: 500;
+      font-size: 1rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .btn-outline-custom:hover {
+      border-color: rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+    }
+    .hero-img-wrap {
+      position: relative;
+      display: flex;
+      justify-content: center;
+    }
+    .hero-img-wrap img {
+      width: 100%;
+      max-width: 460px;
+      filter: drop-shadow(0 0 40px rgba(16,185,129,0.2));
+      animation: float 4s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-14px); }
+    }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      background: rgba(255,255,255,0.03);
+      border-top: 1px solid rgba(255,255,255,0.07);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      padding: 28px 0;
+    }
+    .stat-item { text-align: center; }
+    .stat-item .num {
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, #10b981, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-item .label { font-size: 0.85rem; color: #64748b; margin-top: 2px; }
+
+    /* ── Features ── */
+    .features { padding: 90px 0; }
+    .section-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #10b981;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+    .section-sub { color: #64748b; max-width: 520px; margin: 0 auto 56px; line-height: 1.7; }
+    .feature-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 32px 28px;
+      height: 100%;
+      transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+    }
+    .feature-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(16,185,129,0.3);
+      box-shadow: 0 12px 40px rgba(16,185,129,0.1);
+    }
+    .feature-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 20px;
+    }
+    .icon-green { background: rgba(16,185,129,0.15); color: #10b981; }
+    .icon-blue  { background: rgba(59,130,246,0.15);  color: #3b82f6; }
+    .icon-purple{ background: rgba(139,92,246,0.15);  color: #8b5cf6; }
+    .feature-card h5 { font-weight: 700; color: #f1f5f9; margin-bottom: 10px; }
+    .feature-card p  { color: #64748b; font-size: 0.92rem; line-height: 1.65; margin: 0; }
+
+    /* ── CTA ── */
+    .cta-section {
+      padding: 90px 0;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, rgba(16,185,129,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cta-box {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 64px 40px;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+    .cta-box h2 { font-size: 2rem; font-weight: 800; color: #fff; margin-bottom: 14px; }
+    .cta-box p  { color: #64748b; margin-bottom: 32px; }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid rgba(255,255,255,0.07);
+      padding: 28px 0;
+      text-align: center;
+      color: #475569;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-md px-4">
+    <a class="navbar-brand" href="/">
+      <div class="brand-icon">
+        <i class="bi bi-shield-check text-white" style="font-size:1rem;"></i>
+      </div>
+      FakeGuard
+    </a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <i class="bi bi-list text-white fs-4"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto align-items-center gap-2">
+        <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="/predict">Predict</a></li>
+        <li class="nav-item ms-2">
+          <a href="/predict" class="btn-primary-custom" style="padding:10px 22px; font-size:0.9rem;">
+            Try Now <i class="bi bi-arrow-right"></i>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-6">
+          <div class="hero-badge">
+            <i class="bi bi-cpu"></i> AI-Powered Detection
+          </div>
+          <h1>Detect <span>Fake News</span><br>Instantly with AI</h1>
+          <p>Paste any news headline or article and our machine learning model will analyze it in seconds — powered by a Passive Aggressive Classifier with 96% accuracy.</p>
+          <div class="d-flex flex-wrap gap-3">
+            <a href="/predict" class="btn-primary-custom">
+              <i class="bi bi-search"></i> Analyze News
+            </a>
+            <a href="#how-it-works" class="btn-outline-custom">
+              How it works <i class="bi bi-chevron-down"></i>
+            </a>
+          </div>
+        </div>
+        <div class="col-lg-6 hero-img-wrap">
+          <img src="{{ url_for('static', filename='hero_img.svg') }}" alt="AI analyzing news illustration">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-6 col-md-3 stat-item">
+          <div class="num">96%</div>
+          <div class="label">Model Accuracy</div>
+        </div>
+        <div class="col-6 col-md-3 stat-item">
+          <div class="num">20K+</div>
+          <div class="label">Articles Trained On</div>
+        </div>
+        <div class="col-6 col-md-3 stat-item">
+          <div class="num">NLP</div>
+          <div class="label">Text Processing</div>
+        </div>
+        <div class="col-6 col-md-3 stat-item">
+          <div class="num">PAC</div>
+          <div class="label">Algorithm Used</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <section class="features" id="how-it-works">
+    <div class="container">
+      <div class="text-center">
+        <div class="section-label">How it works</div>
+        <h2 class="section-title">Three steps to the truth</h2>
+        <p class="section-sub">Our pipeline cleans, processes, and classifies your text using proven NLP techniques.</p>
+      </div>
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon icon-green"><i class="bi bi-type"></i></div>
+            <h5>Text Preprocessing</h5>
+            <p>Input is cleaned with regex, lowercased, tokenized, and stop words are removed for clean signal extraction.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon icon-blue"><i class="bi bi-bar-chart-line"></i></div>
+            <h5>TF-IDF Vectorization</h5>
+            <p>Text is converted into numerical feature vectors using Term Frequency–Inverse Document Frequency weighting.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon icon-purple"><i class="bi bi-lightning-charge"></i></div>
+            <h5>ML Classification</h5>
+            <p>A Passive Aggressive Classifier trained on 20,000+ labeled articles predicts whether the news is real or fake.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-box">
+        <h2>Ready to fact-check?</h2>
+        <p>Paste a headline or article and get an instant AI-powered verdict.</p>
+        <a href="/predict" class="btn-primary-custom" style="font-size:1.05rem; padding:15px 36px;">
+          <i class="bi bi-search"></i> Start Analyzing
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p class="mb-0">FakeGuard &mdash; Fake News Detection using Machine Learning &copy; 2024</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
